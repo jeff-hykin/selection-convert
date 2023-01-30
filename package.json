@@ -1,51 +1,54 @@
 {
-    "name": "selection-convert",
-    "displayName": "Selection Convert",
-    "description": "Updated version of selection-convert",
-    "version": "0.0.1",
-    "icon": "icon.png",
-    "scripts": {},
-    "main": "./main/main.js",
-    "keywords": [
-        "selection",
-        "convert",
-        "text",
-        "transform"
-    ],
-    "author": {
-        "name": "Jeff Hykin"
-    },
-    "publisher": "jeff.hykin",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:jeff-hykin/selection-convert.git"
-    },
-    "engines": {
-        "vscode": "^1.58.0"
-    },
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
-        "onCommand:selection-convert.convertSelectedText",
-        "onCommand:selection-convert.addConverter"
-    ],
-    "contributes": {
-        "commands": [
-            {
-                "command": "selection-convert.addConverter",
-                "title": "Selection Convert: Edit/Add Converters"
-            },
-            {
-                "command": "selection-convert.convertSelectedText",
-                "title": "Selection Convert: Convert Selected Text"
-            }
-        ]
-    },
-    "devDependencies": {
-        "glob": "^7.1.7",
-        "@vscode/vsce": "^2.15.0",
-        "ovsx": "^0.7.1"
-    }
+  "name": "selection-convert",
+  "displayName": "Selection Convert",
+  "description": "Updated version of selection-convert",
+  "version": "0.0.1",
+  "icon": "icon.png",
+  "scripts": {},
+  "main": "./main/main.js",
+  "keywords": [
+    "selection",
+    "convert",
+    "text",
+    "transform"
+  ],
+  "author": "Jeff Hykin",
+  "publisher": "jeff-hykin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jeff-hykin/selection-convert.git"
+  },
+  "engines": {
+    "vscode": "^1.58.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:selection-convert.convertSelectedText",
+    "onCommand:selection-convert.addConverter"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "selection-convert.addConverter",
+        "title": "Selection Convert: Edit/Add Converters"
+      },
+      {
+        "command": "selection-convert.convertSelectedText",
+        "title": "Selection Convert: Convert Selected Text"
+      }
+    ]
+  },
+  "devDependencies": {
+    "glob": "^7.1.7",
+    "@vscode/vsce": "^2.15.0",
+    "ovsx": "^0.7.1"
+  },
+  "bugs": {
+    "url": "https://github.com/jeff-hykin/selection-convert/issues"
+  },
+  "homepage": "https://github.com/jeff-hykin/selection-convert#readme",
+  "dependencies": {}
 }
