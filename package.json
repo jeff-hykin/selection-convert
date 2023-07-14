@@ -2,7 +2,7 @@
   "name": "selection-convert",
   "displayName": "Selection Convert",
   "description": "Updated version of selection-convert",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "icon": "icon.png",
   "scripts": {},
   "main": "./main/main.js",
