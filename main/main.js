@@ -114,21 +114,25 @@ module.exports = {
 
                     const converter = converters[selectedConvertKey]
                     const editor = vscode.window.activeTextEditor
+                    const selectionsAndResults = []
                     for (const selection of editor.selections) {
                         const selectedText = editor.document.getText(selection)
-                        editor.edit((builder) => {
-                            try {
-                                const result = converter(selectedText)
-                                if (typeof result != 'string') {
-                                    throw Error(`The ${converter} didn't return a string, instead I got ${result}`)
-                                }
-                                builder.replace(selection, result)
-                            } catch (e) {
-                                console.debug(`selection converter error is:`,e)
-                                vscode.window.showErrorMessage(e)
+                        try {
+                            const result = converter(selectedText)
+                            if (typeof result != 'string') {
+                                throw Error(`The ${converter} didn't return a string, instead I got ${result}`)
                             }
-                        })
+                            selectionsAndResults.push([selection, result])
+                        } catch (e) {
+                            vscode.window.showErrorMessage(e)
+                        }
                     }
+                    // perform one editor action
+                    await editor.edit((builder) => {
+                        for (const [ selection, result ] of selectionsAndResults) {
+                            builder.replace(selection, result)
+                        }
+                    })
                 } catch (error) {
                     vscode.window.showErrorMessage(error)
                 }
