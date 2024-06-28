@@ -59,10 +59,112 @@ const openConverters = async () => {
     vscode.window.showTextDocument(document)
 }
 
+const getConverters = async () => {
+    let converters
+    try {
+        delete require.cache[require.resolve(convertersPath)]
+        converters = require(convertersPath)
+    } catch (e) {
+        if (!fs.existsSync(convertersPath)) {
+            await openConverters()
+            vscode.window.showErrorMessage("Please define your custom converters first.")
+        } else {
+            await openConverters()
+            vscode.window.showErrorMessage(`There's an issue loading the converters: ${e}`)
+        }
+        return
+    }
+    
+    const converterKeys = Object.getOwnPropertyNames(converters).filter((k) => typeof converters[k] === "function")
+    return {converters, converterKeys }
+}
+const callConverter = async (converter) => {
+    const editor = vscode.window.activeTextEditor
+    const selectionsAndResults = []
+    for (const selection of editor.selections) {
+        const selectedText = editor.document.getText(selection)
+        try {
+            const result = converter(selectedText)
+            if (typeof result != 'string') {
+                throw Error(`The ${converter} didn't return a string, instead I got ${result}`)
+            }
+            selectionsAndResults.push([selection, result])
+        } catch (e) {
+            vscode.window.showErrorMessage(e)
+        }
+    }
+    // perform one editor action
+    await editor.edit((builder) => {
+        for (const [ selection, result ] of selectionsAndResults) {
+            builder.replace(selection, result)
+        }
+    })
+}
+
+const knownConverters = {}
+const addConvertersAsCommands = async (context, {converters, converterKeys}) => {
+    const wereRegisteredKeys = [...Object.keys(knownConverters)]
+    const maybeUnregisterdKeys = [...converterKeys] 
+    const alreadyRegisteredKeys = []
+    const needToSendToJson = []
+    let needToUpdatePackageJson = false
+    for (const converterKey of maybeUnregisterdKeys) {
+        if (wereRegisteredKeys.includes(converterKey)) {
+            alreadyRegisteredKeys.push(converterKey)
+            continue
+        }
+        needToUpdatePackageJson = true
+        const commandName = `selection-convert.run ${converterKey}`
+        needToSendToJson.push({commandName, commandTitle: `Convert ${converterKey}`})
+        // update the known converters
+        knownConverters[converterKey] = converters[converterKey]
+        context.subscriptions.push(
+            vscode.commands.registerCommand(commandName, async () => {
+                try {
+                    await callConverter(knownConverters[converterKey])
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.stack)
+                    vscode.window.showErrorMessage(error.message)
+                }
+            })
+        )
+    }
+    registerCommandsToPackageJson(needToSendToJson)
+
+    // for (const converterKey of wereRegisteredKeys) {
+    //     if (!alreadyRegisteredKeys.includes(converterKey)) {
+    //         // TODO: unregister (not sure what the VS Code API is for this)
+    //     }
+    // }
+}
+
+const projectsPackageJsonPath = path.join(__dirname, "..", "package.json")
+let jsonData
+function registerCommandsToPackageJson(commands) {
+    if (!jsonData) {
+        jsonData = JSON.parse(fs.readFileSync(projectsPackageJsonPath, 'utf8'))
+    }
+    if (!jsonData.contributes) {
+        jsonData.contributes = {}
+    }
+    if (!jsonData.contributes.commands) {
+        jsonData.contributes.commands = []
+    }
+    for (const {commandName, commandTitle} of commands) {
+        jsonData.contributes.commands = jsonData.contributes.commands.filter(each => each.command != commandName)
+        jsonData.contributes.commands.push({
+            "command": commandName,
+            "title": commandTitle,
+        })
+    }
+    fs.writeFileSync(__dirname+"/../package.json", JSON.stringify(jsonData, null, 4))
+    window.showInformationMessage(`Will need to refresh to see new commands in the command palette`)
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 module.exports = {
-    activate(context) {
+    async activate(context) {
         console.log('"selection-convert" is now active!')
         
         // 
@@ -83,23 +185,9 @@ module.exports = {
                 }
                 
                 try {
-                    let converters
-                    try {
-                        delete require.cache[require.resolve(convertersPath)]
-                        converters = require(convertersPath)
-                    } catch (e) {
-                        if (!fs.existsSync(convertersPath)) {
-                            await openConverters()
-                            vscode.window.showErrorMessage("Please define your custom converters first.")
-                        } else {
-                            await openConverters()
-                            vscode.window.showErrorMessage(`There's an issue loading the converters: ${e}`)
-                        }
-                        return
-                    }
-
-                    const converterKeys = Object.getOwnPropertyNames(converters).filter((k) => typeof converters[k] === "function")
-
+                    let {converters, converterKeys} = await getConverters()
+                    addConvertersAsCommands(context, {converters, converterKeys}).catch(vscode.window.showErrorMessage)
+                    
                     if (converterKeys.length === 0) {
                         await openConverters()
                         vscode.window.showErrorMessage("Please define your custom converters first.")
@@ -111,34 +199,18 @@ module.exports = {
                     if (!selectedConvertKey) {
                         return
                     }
-
-                    const converter = converters[selectedConvertKey]
-                    const editor = vscode.window.activeTextEditor
-                    const selectionsAndResults = []
-                    for (const selection of editor.selections) {
-                        const selectedText = editor.document.getText(selection)
-                        try {
-                            const result = converter(selectedText)
-                            if (typeof result != 'string') {
-                                throw Error(`The ${converter} didn't return a string, instead I got ${result}`)
-                            }
-                            selectionsAndResults.push([selection, result])
-                        } catch (e) {
-                            vscode.window.showErrorMessage(e)
-                        }
-                    }
-                    // perform one editor action
-                    await editor.edit((builder) => {
-                        for (const [ selection, result ] of selectionsAndResults) {
-                            builder.replace(selection, result)
-                        }
-                    })
+                    
+                    await callConverter(converters[selectedConvertKey])
                 } catch (error) {
                     vscode.window.showErrorMessage(error)
                 }
             })
         )
 
+        // 
+        // register list of commands
+        // 
+        addConvertersAsCommands(context, await getConverters()).catch(vscode.window.showErrorMessage)
     },
     deactivate() {},
 }
