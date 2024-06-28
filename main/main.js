@@ -144,6 +144,7 @@ function registerCommandsToPackageJson(commands) {
     if (!jsonData) {
         jsonData = JSON.parse(fs.readFileSync(projectsPackageJsonPath, 'utf8'))
     }
+    const jsonBefore = JSON.stringify(jsonData)
     if (!jsonData.contributes) {
         jsonData.contributes = {}
     }
@@ -157,8 +158,11 @@ function registerCommandsToPackageJson(commands) {
             "title": commandTitle,
         })
     }
-    fs.writeFileSync(__dirname+"/../package.json", JSON.stringify(jsonData, null, 4))
-    window.showInformationMessage(`Will need to refresh to see new commands in the command palette`)
+    const jsonAfter = JSON.stringify(jsonData)
+    if (jsonBefore != jsonAfter) {
+        fs.writeFileSync(__dirname+"/../package.json", JSON.stringify(jsonData, null, 4))
+        vscode.window.showInformationMessage(`Reload window to see new commands!`)
+    }
 }
 
 // this method is called when your extension is activated
