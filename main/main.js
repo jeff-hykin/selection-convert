@@ -160,7 +160,7 @@ function registerCommandsToPackageJson(commands) {
     }
     const jsonAfter = JSON.stringify(jsonData)
     if (jsonBefore != jsonAfter) {
-        fs.writeFileSync(__dirname+"/../package.json", JSON.stringify(jsonData, null, 4))
+        fs.writeFileSync(projectsPackageJsonPath, JSON.stringify(jsonData, null, 4))
         vscode.window.showInformationMessage(`Reload window to see new commands!`)
     }
 }
