@@ -84,7 +84,7 @@ const callConverter = async (converter) => {
     for (const selection of editor.selections) {
         const selectedText = editor.document.getText(selection)
         try {
-            const result = converter(selectedText)
+            const result = await converter(selectedText)
             if (typeof result != 'string') {
                 throw Error(`The ${converter} didn't return a string, instead I got ${result}`)
             }
