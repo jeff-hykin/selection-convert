@@ -26,6 +26,8 @@ module.exports = {
     deleteSpecificWords: (text) => {
         const userInput = await vscode.window.showInputBox("CSV of words to remove")
         const pattern = new RegExp("\\b(" + userInput.split(",").join("|") + ")\\b", "g")
+        // debugging
+        await vscode.window.showInformationMessage(`regex is ${pattern}`)
         return text.replace(pattern, "")
     },
     // convert selected text to camel case
