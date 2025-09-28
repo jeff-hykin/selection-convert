@@ -4,13 +4,13 @@ Convert selected text by your custom script.
 
 ## Getting started
 
-1. Install `selection-convert`
-2. Open `Command Palette`, and type `Convert Selected Text`
-3. A file in your home folder `.vscode/selection-convert.js` will be created and opened automatically.
-4. Write your custom converting script.
-5. Select the text which you want to convert.
-6. Redo step 2, this time your custom converters should show up.
-7. Pick the one your want to run, and selected text will be replaced.
+1. Install this VS Code extension `selection-convert`
+2. Open `Command Palette` (CMD/CTRL + P), and type `Selection Convert: Add/edit Converters`
+3. A file in your home folder `.vscode/selection-convert.js` will be created and opened automatically (example below).
+4. Add a function (examples below).
+5. Select some text.
+6. Open `Command Palette` (CMD/CTRL + P), and type `Selection Convert: Convert Selected Text`
+7. Pick the name of the function you just made, and volia the text will be transformed.
 
 
 ## Custom Converter Examples:
@@ -23,7 +23,7 @@ module.exports = {
         return text.split(/\n/g).sort((a,b)=>b.length-a.length).join("\n")
     },
     // take advantage of user input
-    deleteSpecificWords: (text) => {
+    deleteSpecificWords: async (text) => {
         const userInput = await vscode.window.showInputBox("CSV of words to remove")
         const pattern = new RegExp("\\b(" + userInput.split(",").join("|") + ")\\b", "g")
         // debugging
